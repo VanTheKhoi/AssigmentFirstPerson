@@ -1,0 +1,13 @@
+{
+	"version": 1,
+	"changelists": [
+		{
+			"guid": "00000000000000000000000000000000",
+			"description": "Default Uncontrolled Changelist",
+			"files": [
+				"D:/UECPP_2026_Course/Projects/firstperson/Content/Variant_Shooter/Blueprints/Pickups/Projectiles/BP_ShooterProjectile_Bullet.uasset",
+				"D:/UECPP_2026_Course/Projects/firstperson/Content/Characters/Mannequins/Materials/Manny/MI_Manny_01_New.uasset"
+			]
+		}
+	]
+}
