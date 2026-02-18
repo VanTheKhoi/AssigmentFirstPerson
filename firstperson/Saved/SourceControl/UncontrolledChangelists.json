@@ -5,6 +5,9 @@
 			"guid": "00000000000000000000000000000000",
 			"description": "Default Uncontrolled Changelist",
 			"files": [
+				"D:/UECPP_2026_Course/Projects/AssigmentFirstPerson/firstperson/Content/Variant_Shooter/Blueprints/Pickups/Projectiles/BP_MyBullet.uasset",
+				"C:/Program Files/Epic Games/UE_5.7/Engine/Content/TemplateResources/M_Template_Master.uasset",
+				"D:/UECPP_2026_Course/Projects/AssigmentFirstPerson/firstperson/Content/Variant_Shooter/Blueprints/Pickups/BP_ShooterWeaponBase.uasset",
 				"D:/UECPP_2026_Course/Projects/firstperson/Content/Variant_Shooter/Blueprints/Pickups/Projectiles/BP_ShooterProjectile_Bullet.uasset",
 				"D:/UECPP_2026_Course/Projects/firstperson/Content/Characters/Mannequins/Materials/Manny/MI_Manny_01_New.uasset"
 			]
