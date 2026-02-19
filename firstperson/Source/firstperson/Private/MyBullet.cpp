@@ -17,7 +17,7 @@ AMyBullet::AMyBullet()
 void AMyBullet::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	OwnerActor = GetOwner();
 }
 
 // Called every frame
@@ -30,15 +30,13 @@ void AMyBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimiti
 	FVector NormalImpulse, const FHitResult& Hit)
 {
 	Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
-
-	// Debug message for hit
-	// DebugHitMessage(TEXT("Hit detected!"));
-	
-	// Set Actor Location and Rotation to the hit location and normal
-	// SetBulletLocationAndRotation(Hit);
 	
 	// Update the hit actor's material to show the hit
 	UpdateHitActorMaterial(OtherActor);
+	
+	// Update the hit Position
+	// SetBulletLocationAndRotation(Hit);
+	
 }
 
 void AMyBullet::DebugHitMessage(FString Message)
@@ -65,46 +63,81 @@ void AMyBullet::SetBulletLocationAndRotation(const FHitResult& Hit)
 
 void AMyBullet::UpdateHitActorMaterial(AActor* HitActor)
 {
-	if (HitActor == this)
+	// Only Default Pawn can change material of the hit actor
+	if (BlueprintClassReference == OwnerActor->GetClass())
 	{
-		return; // Avoid changing material of the bullet itself
-	}
-	
-	TSubclassOf<AActor> CurrentHitActor = HitActor->GetClass();
-	
-	// Check if the hit actor's class matches the BlueprintClassReference
-	if (BlueprintClassReference == CurrentHitActor && BlueprintDefaultPawnClassReference != CurrentHitActor)
-	{
-		// DEBUG 
-		FString ActorName = CurrentHitActor->GetName();
-		DebugHitMessage(ActorName);
+		USkeletalMeshComponent* SkeletalMeshComp = HitActor->FindComponentByClass<USkeletalMeshComponent>();
 		
-		UMeshComponent* MeshComp = HitActor->FindComponentByClass<UMeshComponent>();
-		if (MeshComp)
+		// If the hit actor has a skeletal mesh component, change its material color to red
+		if (SkeletalMeshComp)
 		{
 			// Create a dynamic material instance for each material slot and set the "Paint Tint" parameter to red
-			CreateAndApplyDMI(MeshComp, FLinearColor(1.0f, 0.0f, 0.0f, 1.0f));
+			CreateAndApplyDMI(SkeletalMeshComp, 
+				FLinearColor(1.0f, 0.0f, 0.0f, 1.0f), 
+				FName("Paint Tint"));
 			
 			// Change color back to original after delay
 			GetWorldTimerManager().SetTimer(
 				DelayTimerHandle,
-				[this, MeshComp]()
+				[this, SkeletalMeshComp]()
 				{
-					CreateAndApplyDMI(MeshComp, FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
+					CreateAndApplyDMI(SkeletalMeshComp, 
+						FLinearColor(1.0f, 1.0f, 1.0f, 1.0f), 
+						FName("Paint Tint"));
 				},
 				0.2f,    // Delay in seconds
 				false    // Don't loop
 			);
+			
+			Destroy(true);
 		}
 		
-		// Destroy
-		DestroyActor();
+		else
+		{
+			// If the hit actor doesn't have a skeletal mesh component, 
+			// try to find a static mesh component and change its material color to green
+			UMeshComponent* MeshComp = HitActor->FindComponentByClass<UMeshComponent>();
+			if (MeshComp)
+			{
+				// Get current color to restore later
+				FLinearColor OriginalColor;
+				MeshComp->GetMaterial(0)->GetVectorParameterValue(FName("Base Color"), OriginalColor);
+				
+				// Create a dynamic material instance for each material slot and set the "Paint Tint" parameter to red
+				CreateAndApplyDMI(MeshComp, 
+					FLinearColor(0.0f, 1.0f, 0.0f, 1.0f), 
+					FName("Base Color"));
+				
+				// Change color back to original after delay
+				GetWorldTimerManager().SetTimer(
+					DelayTimerHandle,
+					[this, MeshComp, OriginalColor]()
+					{
+						CreateAndApplyDMI(MeshComp, 
+							OriginalColor, 
+							FName("Base Color"));
+					},
+					0.2f,    // Delay in seconds
+					false    // Don't loop
+				);
+			}
+			
+			// Destroy 
+			Destroy(true);
+		}
 	}
+	
+	// If the owner is not the Default Pawn, just destroy the bullet without changing the material
 	else
 	{
-		// Destroy after delay time
-		GetWorldTimerManager().SetTimer(DelayTimerHandle, this, 
-			&AMyBullet::DestroyActor, 0.3, false);
+		// Destroy after a short delay to allow the material change to be visible
+		GetWorldTimerManager().SetTimer(
+			DelayTimerHandle,
+			this,
+			&AMyBullet::DestroyActor,
+			0.2f,    // Delay in seconds
+			false    // Don't loop
+		);
 	}
 }
 
@@ -113,7 +146,7 @@ void AMyBullet::DestroyActor()
 	Destroy(true);
 }
 
-void AMyBullet::CreateAndApplyDMI(UMeshComponent* MeshComp, FLinearColor Color)
+void AMyBullet::CreateAndApplyDMI(UMeshComponent* MeshComp, FLinearColor Color, FName ParameterName)
 {
 	// Create a dynamic material instance for each material slot and set the "Paint Tint" parameter to red
 	int32 MaterialCount = MeshComp->GetNumMaterials();
@@ -122,7 +155,7 @@ void AMyBullet::CreateAndApplyDMI(UMeshComponent* MeshComp, FLinearColor Color)
 		UMaterialInstanceDynamic* DynamicMaterial = MeshComp->CreateAndSetMaterialInstanceDynamic(i);
 		if (DynamicMaterial)
 		{
-			DynamicMaterial->SetVectorParameterValue(FName("Paint Tint"), Color);
+			DynamicMaterial->SetVectorParameterValue(ParameterName, Color);
 		}
 	}
 }

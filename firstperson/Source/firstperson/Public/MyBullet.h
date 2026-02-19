@@ -24,8 +24,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="MyCustom")
 	TSubclassOf<AActor> BlueprintClassReference;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="MyCustom")
-	TSubclassOf<AActor> BlueprintDefaultPawnClassReference;
+	// Reference to the owner actor (e.g., the character that fired the bullet)
+	UPROPERTY()
+	TObjectPtr<AActor> OwnerActor;
 	
 	// Timer handle for the delay
 	FTimerHandle DelayTimerHandle;
@@ -33,12 +34,22 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
+	// Override the OnHit function to handle hit events
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, 
 		FVector NormalImpulse, const FHitResult& Hit) override;
 	
+	UFUNCTION()
 	void DebugHitMessage(FString Message);
+	
+	UFUNCTION()
 	void SetBulletLocationAndRotation(const FHitResult& Hit);
+	
+	UFUNCTION()
 	void UpdateHitActorMaterial(AActor* HitActor);
+	
+	UFUNCTION()
 	void DestroyActor();
-	void CreateAndApplyDMI(UMeshComponent* MeshComp, FLinearColor Color);
+	
+	UFUNCTION()
+	void CreateAndApplyDMI(UMeshComponent* MeshComp, FLinearColor Color, FName ParameterName);
 };
