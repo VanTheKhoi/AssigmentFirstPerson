@@ -117,7 +117,7 @@ void AMyBullet::UpdateHitActorMaterial(AActor* HitActor)
 							OriginalColor, 
 							FName("Base Color"));
 					},
-					0.2f,    // Delay in seconds
+					0.02f,    // Delay in seconds
 					false    // Don't loop
 				);
 			}
@@ -148,15 +148,24 @@ void AMyBullet::DestroyActor()
 
 void AMyBullet::CreateAndApplyDMI(UMeshComponent* MeshComp, FLinearColor Color, FName ParameterName)
 {
-	// Create a dynamic material instance for each material slot and set the "Paint Tint" parameter to red
+	// Create a dynamic material instance for each material slot and set the specified parameter to the given color
 	int32 MaterialCount = MeshComp->GetNumMaterials();
+	
 	for (int32 i = 0; i < MaterialCount; i++)
 	{
-		UMaterialInstanceDynamic* DynamicMaterial = MeshComp->CreateAndSetMaterialInstanceDynamic(i);
-		if (DynamicMaterial)
+		// Get Material 
+		UMaterialInterface* Material = MeshComp->GetMaterial(i);
+		
+		// Check if it's a dynamic material instance
+		UMaterialInstanceDynamic* DynamicMaterial = Cast<UMaterialInstanceDynamic>(Material);
+		
+		if (!DynamicMaterial)
 		{
-			DynamicMaterial->SetVectorParameterValue(ParameterName, Color);
+			// If it's not a dynamic material instance, create one
+			DynamicMaterial = MeshComp->CreateAndSetMaterialInstanceDynamic(i);
 		}
+		
+		DynamicMaterial->SetVectorParameterValue(ParameterName, Color);
 	}
 }
 
